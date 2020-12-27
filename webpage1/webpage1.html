@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Virtual Door - Owner Portal</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="favicon.ico" >
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/sign-in/">
+    <link href="webpage1.css" rel="stylesheet"  type="text/css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.concat.min.js'></script>
+    <!-- <script type="text/javascript" src="./scripts1.js"></script> -->
+
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/apigClient.js"></script>
+</head>
+
+<body class="text-center body">
+
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <a class="navbar-brand" href="webpage1.html">Virtual Door - Owner Portal</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+      <ul class="navbar-nav">
+      <li class="nav-item">
+          <a class="nav-link" href="webpage1.html">Home</a>
+        </li> 
+      </ul>
+    </div>  
+  </nav>
+  
+  <div class="container" id = "main_body">
+    <form class="form-signin">
+    <h3 class="h3 mb-3 font-weight-normal">Please register your visitor</h3>
+    <label for="first_name" class="sr-only">Name</label>
+    <input type="name" id="first_name" class="form-control" placeholder="First Name" required autofocus>
+    <label for="last_name" class="sr-only">Name</label>
+    <input type="name" id="last_name" class="form-control" placeholder="Last Name" required autofocus>
+    <label for="phone_number" class="sr-only">Phone</label>
+    <input type="phone" id="phone_number" class="form-control" placeholder="10-digit Phonenumber" required>
+
+    <button class="btn btn-lg btn-primary btn-block" type="button" onclick = "sendMsgToApi()">Submit</button>
+    </form>
+  </div>
+
+  <script> 
+    function sendMsgToApi() {
+      var first_name = document.getElementById('first_name').value.trim();
+      console.log(first_name);
+      var last_name = document.getElementById('last_name').value.trim();
+      console.log(last_name);
+      var phone_number = document.getElementById('phone_number').value.trim();
+      console.log(phone_number);
+
+      if (first_name == ''){
+        alert("first name is required");
+        self.location = 'webpage1.html';
+        return false;
+      }
+      else if (last_name == ''){
+        alert("last name is required");
+        self.location = 'webpage1.html';
+        return false;
+      }
+      else if (phone_number == ''){
+        alert("phone number is required");
+        self.location = 'webpage1.html';
+        return false;
+      }
+
+      var name = first_name + "_" + last_name;
+      apigClient = apigClientFactory.newClient();
+      console.log('initialized client');
+      var body = {
+          "messages": [
+              {
+                  "type": "UserMessage",
+                  "unconstructed": {
+                      "name": name,
+                      "phone_number": phone_number
+                  }
+              }
+          ]  
+      };
+      apigClient.uploadInterfacePost({}, body, {})
+        .then(function (result) {
+          console.log(result);
+          var valid = result['data']['body']['messages'][0]['unconstructed']['valid'];
+          var txt = result['data']['body']['messages'][0]['unconstructed']['text'];
+          console.log("valid");
+          console.log(valid);
+
+          if (valid == true){
+            self.location =' webpage1_success.html';
+          } else{
+            console.log(txt);
+            self.location = 'webpage1_failure.html';
+          }
+        }).catch(function (result) {
+          console.log("unexpected error");
+        });
+    }
+  </script>
+
+  <footer id="footer" class="bg-dark text-white-50"><small>
+    Last Updated: 12/02/2020
+    <br>
+    Powered by <a href="http://getbootstrap.com" target="_blank">Bootstrap</a></small>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Virtual Door - visitor Portal</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="favicon.ico" >
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/sign-in/">
+    <link href="webpage2.css" rel="stylesheet"  type="text/css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.concat.min.js'></script>
+    <!-- <script type="text/javascript" src="./scripts1.js"></script> -->
+
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apiGateway-js-sdk/apigClient.js"></script>
+</head>
+
+<body class="text-center body">
+
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <a class="navbar-brand" href="webpage2.html">Virtual Door - visitor Portal</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+      <ul class="navbar-nav">
+      <li class="nav-item">
+          <a class="nav-link" href="webpage2.html">Home</a>
+        </li> 
+      </ul>
+    </div>  
+  </nav>
+  
+  <div class="container" id = "main_body">
+    <form class="form-signin">
+    <h3 class="h3 mb-3 font-weight-normal">Please enter your passcode</h3>
+    <label for="passcode" class="sr-only">Name</label>
+    <input type="pass" id="passcode" class="form-control" placeholder="Passcode" required autofocus>
+    <br>
+    <button class="btn btn-lg btn-primary btn-block" type="button" onclick = "sendMsgToApi()">Submit</button>
+    </form>
+  </div>
+
+  <script> 
+    function sendMsgToApi() {
+      var passcode = document.getElementById('passcode').value.trim().toLowerCase();
+      console.log(passcode);
+      if (passcode == ''){
+        alert("passcode is required");
+        self.location = 'webpage2.html';
+        return false;
+      }
+
+      apigClient = apigClientFactory.newClient();
+      console.log('initialized client');
+      var body = {
+          "messages": [
+              {
+                  "type": "UserMessage",
+                  "unconstructed": {
+                      "passcode": passcode
+                  }
+              }
+          ]  
+      };
+      apigClient.virtualDoorPost({}, body, {})
+        .then(function (result) {
+          console.log(result);
+          var valid = result['data']['body']['messages'][0]['unconstructed']['valid'];
+          console.log("valid");
+          console.log(valid);
+
+          if (valid == true){
+            var name = result['data']['body']['messages'][0]['unconstructed']['visitor_info']['name'].replace("_", " ");
+            var face_img = result['data']['body']['messages'][0]['unconstructed']['visitor_info']['photo'];
+            sessionStorage.setItem("name", name); 
+            sessionStorage.setItem("face_url", face_img); 
+            self.location = 'webpage2_success.html';
+          } else{
+            self.location = 'webpage2_failure.html';
+          }
+        }).catch(function (result) {
+          console.log("unexpected error");
+        });
+    }
+  </script>
+
+  <footer id="footer" class="bg-dark text-white-50"><small>
+    Last Updated: 12/06/2020
+    <br>
+    Powered by <a href="http://getbootstrap.com" target="_blank">Bootstrap</a></small>
+  </footer>
+
+</body>
+</html>
